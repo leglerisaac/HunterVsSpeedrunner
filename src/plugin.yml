@@ -1,0 +1,10 @@
+name: HunterVsSpeedrunner
+version: 1.0
+author: Leglord
+main: me.Leglord.HunterVsSpeedrunner.Main
+description: 1.16.1 Hunter vs Speedrunner challenge plugin.
+
+commands:
+  compass:
+    aliases: [hunt, track]
+    description:  gives speedrunner-tracking compass to hunter 
