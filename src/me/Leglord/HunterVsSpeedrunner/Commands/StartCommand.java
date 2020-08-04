@@ -9,23 +9,24 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
 import me.Leglord.HunterVsSpeedrunner.Main;
+import me.Leglord.HunterVsSpeedrunner.Data;
 
-public class StartCommand implements CommandExecutor {
-		
+public class StartCommand extends StopCommand implements CommandExecutor {
+
 	@SuppressWarnings("unused")
 	private Main plugin;
-	boolean exists = false;
-	
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		
 		Player p = (Player) sender;
+		Data.setHunter(p.getUniqueId(), true);
 		int argnum = args.length;
 		Player target = Bukkit.getPlayerExact(args[0]);
 		ItemStack compass = new ItemStack(Material.COMPASS);
-	
+		boolean exists = false;
+		
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("This command is for players only");
 			return true;	
@@ -35,24 +36,37 @@ public class StartCommand implements CommandExecutor {
 		}else if (argnum > 1){
 			p.sendMessage(ChatColor.RED + "Incorrect usage. Can only track 1 player at a time.");
 			return false;
+		}else if (target == p){
+			p.sendMessage(ChatColor.RED + "Incorrect usage. Please enter a player that is not yourself.");
+			return false;
+		}else if (target == null){
+			p.sendMessage(ChatColor.RED + "Incorrect usage. Please enter a player that is online.");
+			return false;
 		}else if (argnum == 1){
-			Location location = target.getLocation();
 			for(ItemStack item : p.getInventory().getContents()){
-				if(item.isSimilar(compass)){
+				if(item == compass){
 					exists = true;
 				}
 			}
-			p.getInventory().addItem(compass);
-			p.setCompassTarget(location);
-			p.sendMessage("compass is now tracking " + target);
-			while (exists = true) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
+			if (exists == false){ 
+				p.getInventory().addItem(compass);
+			}
+			
+			p.sendMessage("compass is now tracking " + args[0]);
+			new Thread (new Runnable() {
+				public void run() {
+					while (Data.getHunter(p.getUniqueId())) {
+						if (p.getLocation().getWorld().getName().endsWith("world")) {
+							try {
+								Thread.sleep(50);
+							} catch (InterruptedException e) {
+							}
+							Location location = target.getLocation();
+							p.setCompassTarget(location); 
+						}
+					}
 				}
-				location = target.getLocation();
-				p.setCompassTarget(location);
-			}	
+			}).start();
 			return true;
 		} else {
 			p.sendMessage("You can't use this command");
@@ -60,4 +74,3 @@ public class StartCommand implements CommandExecutor {
 	return false;
 	}
 }
-
